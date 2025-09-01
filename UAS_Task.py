@@ -7,36 +7,33 @@ def load_image(path):
         print("could not load image")
     else:
         print("Image succesfully loaded")
-    
-        # cv2.imshow("Original Image",image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+
         return image
     
 
 #function to detect land and sea
 def detect_land_and_sea(img): # to convert into pure rgb 
-    # Convert to HSV (better for color detection)
+    # Converted to HSV (better for color detection)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    # Define range for green color in HSV
+    # Defining range for green color in HSV
     lower_green = np.array([1, 144, 7])   # adjust if needed
     upper_green = np.array([85, 255, 255])
 
-    # Create mask for green
+    # Creating mask for green
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
-    # Create a yellow image of same size
+    # Creating a yellow image of same size
     yellow = np.zeros_like(img, np.uint8)
-    yellow[:] = (0, 255, 255)   # BGR for Yellow
+    yellow[:] = (0, 255, 255)   
 
     # Applying mask
     result = cv2.bitwise_and(yellow, yellow, mask=mask)
 
-    # Combine with original image (where mask is not green keep original)
+    # Combining with original image (where mask is not green keep original)
     final = cv2.addWeighted(result, 1, img, 1, 0)
 
-    # Show results
+    # displaying image
     cv2.imshow("Original", img)
     cv2.imshow("Masked Green -> Yellow", final)
     cv2.waitKey(0)
@@ -46,6 +43,7 @@ def detect_land_and_sea(img): # to convert into pure rgb
 
 #function to detect colour
 def detect_colour(img):
+    #converted to hsv for better colour detection
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     color_ranges = {
     "red": [
@@ -60,7 +58,7 @@ def detect_colour(img):
     }
     detected_color = None
     pe=0
-    # Loop through defined colors
+    # Looping through defined colors
     for color, ranges in color_ranges.items():
         mask = None
         for lower, upper in ranges:
@@ -70,7 +68,7 @@ def detect_colour(img):
             else:
                 mask = cv2.bitwise_or(mask, curr_mask)
         
-        # Count non-zero pixels in mask
+        # Counting non-zero pixels in mask
         if cv2.countNonZero(mask) > 0:
             detected_color = color
             if detected_color=="red":
@@ -93,12 +91,10 @@ def detect_colour(img):
 def detect_shapes(img):
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # cv2.resize()
+
     blurred = cv2.GaussianBlur(gray, (3,5),3)
     _,h = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)
-    cv2.imshow("img",h)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
 
     edged = cv2.Canny(h, 30, 150)
 
@@ -153,78 +149,9 @@ def detect_shapes(img):
         dist=np.append(dist,[[x,y]],axis=0)
         details=np.concatenate((arr,dist),axis=1)
 
-    cv2.imshow("Shape Detection", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    print("basic array=\n",arr)
-    print("coordinates=\n",dist)
-    print("basic details = \n",details)
     return img ,details,cn
 
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # blurred = cv2.GaussianBlur(gray, (3,3), 0)
-
-    # edged = cv2.Canny(blurred, 30, 150)
-
-    # contours, _ = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # arr=np.empty((0,3))
-    # dist=np.empty((0,2))
-    # details=np.empty((0,4))
-    # casuality=""
-    # pe=0
-    # pc=0
-    # cn=1 #casuality no.
-
-    # for c in contours:
-
-    #     corner = cv2.arcLength(c, True)
-        
-    #     approx = cv2.approxPolyDP(c, 0.03 * corner, True)
-        
-    #     x= approx.ravel()[0]
-    #     y= approx.ravel()[1]-10
-
-    #     num_vertices = len(approx)
-
-    #     if num_vertices == 3:
-    #         casuality= "Elderly"
-    #         pc=2 #priority order of casuality
-    #         pe=detect_colour(img)
-    #         cn+=1
-
-    #     elif num_vertices == 4:
-    #         casuality= "Adult"
-    #         pc=1
-    #         pe=detect_colour(img)
-    #         cn+=1 
     
-    #     elif num_vertices ==10:
-    #         casuality= "Child"
-    #         pc=3
-    #         pe=detect_colour(img)
-    #         cn+=1
-    #     else:
-    #         casuality="Rescue pad"
-    #         pc=4
-    #         pe=detect_colour(img)
-
-    #     cv2.drawContours(img, [c], -1, (0, 0, 0), 2)
-    #     cv2.putText(img, casuality, (x - 20, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-    #     cv2.putText(img, str(pc*pe), (x - 40, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-    #     cv2.putText(img, str(cn), (x - 50, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-    #     arr=np.append(arr,[[cn,pc,pe]],axis=0)
-    #     dist=np.append(dist,[[x,y]],axis=0)
-    #     details=np.concatenate((arr,dist),axis=1)
-
-    # cv2.imshow("Shape Detection", img)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    # print("basic array=\n",arr)
-    # print("coordinates=\n",dist)
-    # print("basic details = \n",details)
-    # return img ,details,cn
 
 #function to find distance between the pad and casuality
 def pad_casuality_dist(details):
@@ -238,7 +165,7 @@ def pad_casuality_dist(details):
         if i[1]==4:
             pad=np.append(pad,[[pn,i[ 2],i[3],i[4]]],axis=0)
             pn+=1
-    #print("Pad=\n[pad no. ,pad capacity,x coordinate,y coordinate ]\n",pad)
+  
     for i in details:
         if i[1]==4:
             continue
@@ -246,7 +173,6 @@ def pad_casuality_dist(details):
             for j in pad:
                 d=((i[3]-j[2])**2 + (i[4]-j[3])**2)**(1/2)  # found distance between the two points
                 dist_matrix=np.append(dist_matrix,[[i[0],i[1],i[2],j[0],d]] ,axis=0) #i[0]=causality no., i[1]=priority of casuality,i[2]=priority of emergency,j[0]=pad no.,d=dist from pad
-    #print("distance matrix = \n",dist_matrix)
     return dist_matrix,pad
 
 
@@ -254,10 +180,10 @@ def pad_casuality_dist(details):
 
 def pad_casuality(data, pad_capacity, pad_colors):
 
-    # Track used pads
+    # Tracking used pads
     used_pads = {pad: 0 for pad in pad_capacity}
 
-    # Extract columns
+    # Extracting columns
     casualties = data[:,0].astype(int)
     pc = data[:,1]
     pe = data[:,2]
@@ -267,11 +193,10 @@ def pad_casuality(data, pad_capacity, pad_colors):
     # Priority (score)
     priority = pc * pe
 
-    # Combine into one array: (casualty, priority, pad, distance, pc, pe)
+    # Combining into one array: (casualty, priority, pad, distance, pc, pe)
     matrix = np.column_stack((casualties, priority, pads, distances, pc, pe))
-    #print("matrix\n [casualties, priority, pads, distances, pc, pe]\n",matrix)
-
-    # Sort by priority(desc) then distance(asc)
+ 
+    # Sorting by priority(desc) then distance(asc)
     order = np.lexsort((matrix[:,3], -matrix[:,1]))
     matrix = matrix[order]
 
@@ -283,11 +208,11 @@ def pad_casuality(data, pad_capacity, pad_colors):
     # Score sums by pad color
     color_sums = {"blue": 0, "pink": 0, "grey": 0}
 
-    # Process casualties in priority order
+    # Processing casualties in priority order
     for cas in np.unique(matrix[:,0]):  # each unique casualty
-        # Get all rows for this casualty
+        # Getting all rows for this casualty
         cas_rows = matrix[matrix[:,0] == cas]
-        # Sort by distance
+        # Sorting by distance
         cas_rows = cas_rows[cas_rows[:,3].argsort()]
 
         for row in cas_rows:
@@ -296,35 +221,29 @@ def pad_casuality(data, pad_capacity, pad_colors):
                 pc_val, pe_val = int(row[4]), int(row[5])
                 score = pc_val * pe_val
 
-                # Add [pc, pe] to the pad’s assignment list
+                # Adding [pc, pe] to the pad’s assignment list
                 assignments_by_pad[pad].append([pc_val, pe_val])
                 
             
 
-                # Update pad usage
+                # Updating pad usage
                 used_pads[pad] += 1
 
-                # Update color score (map pad → color)
+                # Updating color score (map pad → color)
                 pad_color = pad_colors.get(pad, None)
                 if pad_color in color_sums:
                     color_sums[pad_color] += score
 
-                break  # assigned, stop checking pads
+                break  
 
-    # Convert to matrix (list of lists)
+    # Converting to matrix 
     assignments_matrix = [
         assignments_by_pad[1],  # grey pad
         assignments_by_pad[2],  # pink pad
         assignments_by_pad[3]   # blue pad
     ]
 
-    # # Print final matrix
-    # print("\n Assignments Matrix:")
-    # print(assignments_matrix)
-
-
-    # # Print color score sums
-    # print("\nSummation of scores by pad color:")
+    
     score_sum=([color_sums["blue"],
         color_sums["pink"],
         color_sums["grey"]])
@@ -334,22 +253,6 @@ def pad_casuality(data, pad_capacity, pad_colors):
 
 
 
-# pad_capacity = {1:2, 2:3, 3:4}
-#     # Pad → color mapping
-# pad_colors = {
-#         1: "grey",   # pad1 = grey
-#         2: "pink",   # pad2 = pink
-#         3: "blue"    # pad3 = blue
-#     }
-# image=load_image('images/1.png')
-# res=detect_land_and_sea(image)
-# casuality,details,n =detect_shapes(res)
-# distance,pad_det=pad_casuality_dist(details)
-# colour_sum , assignments=pad_casuality(distance,pad_capacity,pad_colors,details,pad_det)
-# res_with_lines = draw_assignments(res, assignments, details, pad_det)
-# cv2.imshow("Assignments", res_with_lines)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
 
 # main code 
 pad_capacity = {1:2, 2:3, 3:4} #capacity of each pad
@@ -363,7 +266,7 @@ image_rescue_ratio= {} #this dictionary will contain image no. as key and rescue
 for i in range(1,11): #running this loop to access each image from the file
     image=load_image('images/%d.png'%i) #loaded the image
     #displaying the Original image
-    cv2.imshow("Original Image%d"%i, image)
+    cv2.imshow("Original Image", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     #calling function to mask land as yellow and storing the image as res , the function displays the image as well
